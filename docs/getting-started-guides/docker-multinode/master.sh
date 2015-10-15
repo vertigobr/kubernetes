@@ -20,7 +20,7 @@
 set -e
 
 # Make sure docker daemon is running
-if ( ! ps -ef | grep "/usr/bin/docker" | grep -v 'grep' &> /dev/null ); then
+if ( ! ps -o cmd -e | grep "^\/usr\/\(local\/\|\)bin\/docker" &> /dev/null ); then
     echo "Docker is not running on this machine!"
     exit 1
 fi
@@ -61,26 +61,26 @@ detect_lsb() {
     if command_exists lsb_release; then
         lsb_dist="$(lsb_release -si)"
     fi
-    if [ -z ${lsb_dist} ] && [ -r /etc/lsb-release ]; then
+    if [ -z ${lsb_dist+x} ] && [ -r /etc/lsb-release ]; then
         lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
     fi
-    if [ -z ${lsb_dist} ] && [ -r /etc/debian_version ]; then
+    if [ -z ${lsb_dist+x} ] && [ -r /etc/debian_version ]; then
         lsb_dist='debian'
     fi
-    if [ -z ${lsb_dist} ] && [ -r /etc/fedora-release ]; then
+    if [ -z ${lsb_dist+x} ] && [ -r /etc/fedora-release ]; then
         lsb_dist='fedora'
     fi
-    if [ -z ${lsb_dist} ] && [ -r /etc/os-release ]; then
+    if [ -z ${lsb_dist+x} ] && [ -r /etc/os-release ]; then
         lsb_dist="$(. /etc/os-release && echo "$ID")"
     fi
 
-    lsb_dist="$(echo ${lsb_dist} | tr '[:upper:]' '[:lower:]')"
+    lsb_dist="$(echo ${lsb_dist} | awk '{print $1;}' | tr '[:upper:]' '[:lower:]')"
 
     case "${lsb_dist}" in
-        amzn|centos|debian|ubuntu)
+        amzn|centos|debian|ubuntu|boot2docker)
             ;;
         *)
-            echo "Error: We currently only support ubuntu|debian|amzn|centos."
+            echo "Error: We currently only support ubuntu|debian|amzn|centos|boot2docker."
             exit 1
             ;;
     esac
